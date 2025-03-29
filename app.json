@@ -8,20 +8,38 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.SmartPawsEXPO",
+      "infoPlist": {
+        "NSCameraUsageDescription": "SmartPaws needs access to your camera to scan and analyze your dog.",
+        "NSPhotoLibraryUsageDescription": "SmartPaws needs access to your photo library to save and load images.",
+        "NSUserNotificationUsageDescription": "SmartPaws would like to send you reminders and updates."
+      }
     },
+
     "android": {
+      "package": "com.anonymous.SmartPawsEXPO",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_MEDIA_LOCATION",
+        "NOTIFICATIONS"
+      ]
     },
+
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
       [
@@ -32,8 +50,25 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow SmartPaws to access your photos.",
+          "savePhotosPermission": "Allow SmartPaws to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SmartPaws to access your camera"
+        }
+      ],
+      "expo-notifications",
+      "expo-video"
     ],
+
     "experiments": {
       "typedRoutes": true
     }
