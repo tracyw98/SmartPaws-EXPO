@@ -1,51 +1,63 @@
-// components/DogProfileSlider.tsx
 import React, { useRef } from "react";
 import {
   View,
+  FlatList,
   Text,
   StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Animated,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 
-const screenWidth = Dimensions.get("window").width;
-const ITEM_WIDTH = 70;
-const ITEM_SPACING = (screenWidth - ITEM_WIDTH) / 2;
+const { width } = Dimensions.get("window");
 
-interface Props {
-  onSelectProfile: (index: number) => void;
-}
+// 🔧 To change circle size, update ITEM_SIZE here
+const ITEM_SIZE = 60;
+const SPACING = 12;
 
-export default function DogProfileSlider({ onSelectProfile }: Props) {
-  const scrollX = useRef(new Animated.Value(0)).current;
+const profiles = [
+  { id: "1", name: "Dog 1" },
+  { id: "2", name: "Dog 2" },
+  { id: "3", name: "Dog 3" },
+  { id: "add", name: "+" },
+];
 
-  // Show 3 empty profile slots with "+"
-  const placeholderProfiles = Array(3).fill({ isAddNew: true });
+export default function DogProfileSlider({
+  onProfileSelect,
+}: {
+  onProfileSelect: (profileId: string) => void;
+}) {
+  const listRef = useRef<FlatList>(null);
+
+  const handleSnap = (event: any) => {
+    const index = Math.round(
+      event.nativeEvent.contentOffset.x / (ITEM_SIZE + SPACING)
+    );
+    const profile = profiles[index];
+    if (profile) {
+      onProfileSelect(profile.id);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Animated.FlatList
-        data={placeholderProfiles}
-        keyExtractor={(_, i) => i.toString()}
+    <View style={styles.sliderContainer}>
+      <FlatList
+        ref={listRef}
+        data={profiles}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: ITEM_SPACING }}
-        snapToInterval={ITEM_WIDTH}
+        snapToInterval={ITEM_SIZE + SPACING}
         decelerationRate="fast"
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(
-            event.nativeEvent.contentOffset.x / ITEM_WIDTH
-          );
-          onSelectProfile(index);
+        contentContainerStyle={{
+          paddingHorizontal: (width - ITEM_SIZE) / 2,
         }}
+        keyExtractor={(item) => item.id}
+        onScrollEndDrag={handleSnap}
         renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <TouchableOpacity style={styles.circle}>
-              <Text style={styles.icon}>+</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.item}>
+            <View style={styles.circle}>
+              <Text style={styles.label}>{item.name === "+" ? "+" : "🐶"}</Text>
+            </View>
+          </TouchableOpacity>
         )}
       />
     </View>
@@ -53,28 +65,32 @@ export default function DogProfileSlider({ onSelectProfile }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  sliderContainer: {
     position: "absolute",
-    bottom: 160, // Place above Capture button
+    bottom: 140,
     width: "100%",
   },
-  itemContainer: {
-    width: ITEM_WIDTH,
-    alignItems: "center",
+  item: {
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
     justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: SPACING / 2,
   },
   circle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderStyle: "dashed",
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
+    borderRadius: ITEM_SIZE / 2,
     borderWidth: 2,
-    borderColor: "#aaa",
-    alignItems: "center",
+    borderColor: "#fff",
+    borderStyle: "dashed", // ✅ Dotted look
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#00000066",
   },
-  icon: {
+  label: {
     fontSize: 24,
-    color: "#aaa",
+    fontWeight: "bold",
+    color: "#fff",
   },
 });

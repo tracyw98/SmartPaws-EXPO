@@ -8,64 +8,96 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-import { CameraView, FlashMode } from "expo-camera";
-import useCameraAccess from "../hooks/useCameraAccess";
-import IconButton from "../components/IconButton";
-import CaptureButton from "../components/CaptureButton";
-import GalleryComponent from "../components/GalleryComponent";
 import {
-  GestureHandlerRootView,
-  PinchGestureHandler,
-} from "react-native-gesture-handler";
-import BellButton from "../components/BellButton";
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+  CameraProps,
+} from "react-native-vision-camera";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+import Reanimated, {
+  useSharedValue,
+  interpolate,
+  Extrapolation,
+  useAnimatedProps,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+
+import IconButton from "@/components/IconButton";
+import CaptureButton from "@/components/CaptureButton";
+import GalleryComponent from "@/components/GalleryComponent";
+import BellButton from "@/components/BellButton";
+import ZoomSwitch from "@/components/ZoomSwitch"; // ✅ ADDED
+
+// 📸 Make Camera zoomable with reanimated
+Reanimated.addWhitelistedNativeProps({ zoom: true });
+const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
 const screen = Dimensions.get("window");
 
 export default function HomeScreen() {
-  const cameraRef = useRef(null);
-  const { cameraPermission } = useCameraAccess();
-
+  const cameraRef = useRef<Camera>(null);
+  const { hasPermission, requestPermission } = useCameraPermission();
   const [cameraFacing, setCameraFacing] = useState<"front" | "back">("back");
-  const [flashMode, setFlashMode] = useState<FlashMode>("off");
-  const [zoom, setZoom] = useState(0.0);
+  const [flash, setFlash] = useState<"off" | "on">("off");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const device = useCameraDevice(cameraFacing);
+
+  // 🔁 Zoom handling with shared value
+  const zoom = useSharedValue(1);
+  const zoomOffset = useSharedValue(1);
+
+  const pinchGesture = Gesture.Pinch()
+    .onBegin(() => {
+      zoomOffset.value = zoom.value;
+    })
+    .onUpdate((event) => {
+      const newZoom = zoomOffset.value * event.scale;
+      zoom.value = interpolate(
+        newZoom,
+        [1, 10],
+        [device?.minZoom ?? 1, device?.maxZoom ?? 1],
+        Extrapolation.CLAMP
+      );
+    });
+
+  const animatedProps = useAnimatedProps<CameraProps>(() => ({
+    zoom: zoom.value,
+  }));
+
+  React.useEffect(() => {
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission]);
 
   const handleTakePicture = async () => {
     try {
-      const photo = await cameraRef.current?.takePictureAsync();
-      if (photo?.uri) {
-        setSelectedImage(photo.uri);
+      const photo = await cameraRef.current?.takePhoto({
+        flash: flash === "on" ? "on" : "off",
+      });
+      if (photo?.path) {
+        setSelectedImage("file://" + photo.path);
       }
     } catch (error) {
       console.error("Failed to take picture:", error);
     }
   };
 
-  const handlePinchGesture = (event) => {
-    const { scale, velocity } = event.nativeEvent;
-
-    let newZoom =
-      velocity > 0
-        ? zoom + scale * velocity * (Platform.OS === "ios" ? 0.005 : 25)
-        : zoom -
-          scale * Math.abs(velocity) * (Platform.OS === "ios" ? 0.005 : 50);
-
-    newZoom = Math.max(0, Math.min(newZoom, 1));
-    setZoom(newZoom);
-  };
-
-  if (cameraPermission === null) {
+  if (!hasPermission) {
     return (
       <View style={styles.permissionContainer}>
-        <Text>Checking camera permissions...</Text>
+        <Text>Requesting camera permission...</Text>
       </View>
     );
   }
 
-  if (!cameraPermission) {
+  if (!device) {
     return (
       <View style={styles.permissionContainer}>
-        <Text>Camera access denied. Please enable it in settings.</Text>
+        <Text>No camera device found.</Text>
       </View>
     );
   }
@@ -91,17 +123,18 @@ export default function HomeScreen() {
           </View>
         </>
       ) : (
-        <PinchGestureHandler onGestureEvent={handlePinchGesture}>
-          <View style={{ flex: 1 }}>
-            <CameraView
-              ref={cameraRef}
-              style={styles.camera}
-              facing={cameraFacing}
-              flash={flashMode}
-              zoom={zoom}
-              onCameraReady={() => console.log("Camera is ready")}
-            >
-              {/* 🔘 Top-right controls */}
+        <>
+          <GestureDetector gesture={pinchGesture}>
+            <View style={{ flex: 1 }}>
+              <ReanimatedCamera
+                ref={cameraRef}
+                style={styles.camera}
+                device={device}
+                isActive={true}
+                photo={true}
+                animatedProps={animatedProps}
+              />
+
               <View style={styles.controlsContainer}>
                 <IconButton
                   iosName="person.crop.circle"
@@ -111,12 +144,10 @@ export default function HomeScreen() {
                   height={40}
                 />
                 <IconButton
-                  iosName={
-                    flashMode === "off" ? "bolt.slash.fill" : "bolt.fill"
-                  }
-                  androidName={flashMode === "off" ? "flash-off" : "flash"}
+                  iosName={flash === "off" ? "bolt.slash.fill" : "bolt.fill"}
+                  androidName={flash === "off" ? "flash-off" : "flash"}
                   onPress={() =>
-                    setFlashMode((prev) => (prev === "off" ? "torch" : "off"))
+                    setFlash((prev) => (prev === "off" ? "on" : "off"))
                   }
                   width={40}
                   height={40}
@@ -132,19 +163,19 @@ export default function HomeScreen() {
                   width={40}
                   height={40}
                 />
+
+                {/* ✅ Zoom Switch below flip camera */}
+                {device && <ZoomSwitch zoom={zoom} device={device} />}
               </View>
 
-              {/* 🖼️ Gallery Picker */}
-              <GalleryComponent
-                onImageSelected={(uri) => setSelectedImage(uri)}
-              />
               <BellButton />
-
-              {/* 📸 Capture button */}
               <CaptureButton handleTakePicture={handleTakePicture} />
-            </CameraView>
-          </View>
-        </PinchGestureHandler>
+            </View>
+          </GestureDetector>
+
+          {/* ✅ Gallery placed OUTSIDE GestureDetector to work properly */}
+          <GalleryComponent onImageSelected={(uri) => setSelectedImage(uri)} />
+        </>
       )}
     </GestureHandlerRootView>
   );

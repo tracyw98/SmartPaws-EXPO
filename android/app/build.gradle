@@ -86,7 +86,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.SmartPawsEXPO'
+    namespace "com.smartpawsexpo"
     defaultConfig {
         applicationId 'com.anonymous.SmartPawsEXPO'
         minSdkVersion rootProject.ext.minSdkVersion

@@ -11,7 +11,6 @@ export default function GalleryComponent({ onImageSelected }: Props) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [latestImage, setLatestImage] = useState<string | null>(null);
 
-  // Request gallery permission and get latest image
   useEffect(() => {
     (async () => {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -19,18 +18,13 @@ export default function GalleryComponent({ onImageSelected }: Props) {
 
       if (status === "granted") {
         const assets = await MediaLibrary.getAssetsAsync({
-          mediaType: "photo",
+          mediaType: MediaLibrary.MediaType.photo,
           first: 1,
           sortBy: [["creationTime", false]],
         });
 
         if (assets.assets.length > 0) {
-          const assetInfo = await MediaLibrary.getAssetInfoAsync(
-            assets.assets[0].id
-          );
-          if (assetInfo.localUri) {
-            setLatestImage(assetInfo.localUri);
-          }
+          setLatestImage(assets.assets[0].uri); // ✅ use asset.uri directly
         }
       }
     })();
@@ -40,24 +34,16 @@ export default function GalleryComponent({ onImageSelected }: Props) {
     if (!hasPermission) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // ✅ modern usage
       allowsEditing: false,
       quality: 1,
       selectionLimit: 1,
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      const assetId = result.assets[0].assetId;
-
-      if (assetId) {
-        const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
-        if (assetInfo.localUri) {
-          onImageSelected(assetInfo.localUri);
-        } else {
-          console.warn("Unable to fetch local URI from asset.");
-        }
-      } else {
-        onImageSelected(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      if (uri) {
+        onImageSelected(uri); // ✅ safest, avoids assetId lookup
       }
     }
   };
