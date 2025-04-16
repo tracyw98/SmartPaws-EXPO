@@ -13,12 +13,11 @@
       "bundleIdentifier": "com.anonymous.SmartPawsEXPO",
       "infoPlist": {
         "NSCameraUsageDescription": "SmartPaws needs access to your camera.",
-        "NSPhotoLibraryUsageDescription": "SmartPaws  needs access to your Photo Library to save and load images.",
+        "NSPhotoLibraryUsageDescription": "SmartPaws needs access to your Photo Library to save and load images.",
         "NSUserNotificationUsageDescription": "SmartPaws would like to send you reminders and updates.",
-        "NSMicrophoneUsageDescription": "SmartPaws  needs access to your Microphone."
+        "NSMicrophoneUsageDescription": "SmartPaws needs access to your Microphone."
       }
     },
-
     "android": {
       "package": "com.anonymous.SmartPawsEXPO",
       "adaptiveIcon": {
@@ -71,8 +70,16 @@
           "microphonePermissionText": "SmartPaws needs access to your Microphone."
         }
       ],
+      [
+        "react-native-fast-tflite",
+        {
+          "enableCoreMLDelegate": false,
+          "enableAndroidGpuLibraries": true
+        }
+      ],
       "expo-notifications",
-      "expo-video"
+      "expo-video",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

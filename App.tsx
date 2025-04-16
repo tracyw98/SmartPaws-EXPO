@@ -1,17 +1,23 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import HomeScreen from "./screens/HomeScreen";
+import { View, StyleSheet } from "react-native";
+import { Provider as PaperProvider } from "react-native-paper";
+import MoodPieChartSummary from "./components/MoodPieChartSummary";
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <HomeScreen />
-    </View>
+    <PaperProvider>
+      <View style={styles.container}>
+        <MoodPieChartSummary />
+      </View>
+    </PaperProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });
