@@ -1,165 +1,100 @@
-// ✅ Full working demo version with embedded scan data for testing
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Dimensions, Pressable } from "react-native";
 import { Menu, Button } from "react-native-paper";
-import Svg, { G, Path } from "react-native-svg";
+import { LineChart } from "react-native-chart-kit";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as d3Shape from "d3-shape";
 
-const filters = [
-  "Last Scan",
-  "This Week",
-  "This Month",
-  "This Year",
-  "All Time",
-];
-const screenWidth = Dimensions.get("window").width;
+const screenWidth = Dimensions.get("window").width - 40;
+
+const moods = ["Happy", "Sad", "Calm", "Anxious", "Energetic"];
 const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"];
+const filters = ["This Week", "This Month", "This Year", "All Time"];
 
-const MoodPieChartBox = () => {
-  const [selectedFilter, setSelectedFilter] = useState("All Time");
-  const [visible, setVisible] = useState(false);
-  const [filteredData, setFilteredData] = useState([0, 0, 0, 0, 0]);
-  const [scanCount, setScanCount] = useState(0);
+const dummyData = {
+  "This Week": [
+    { label: "04/15", values: [2, 4, 3, 1, 5] },
+    { label: "04/16", values: [3, 3, 4, 2, 4] },
+    { label: "04/17", values: [4, 2, 2, 3, 3] },
+  ],
+  "This Month": [
+    { label: "Week 1", values: [2, 3, 3, 2, 3] },
+    { label: "Week 2", values: [4, 2, 2, 4, 3] },
+    { label: "Week 3", values: [3, 4, 3, 2, 4] },
+    { label: "Week 4", values: [5, 1, 4, 3, 2] },
+    { label: "Week 5", values: [3, 3, 3, 3, 3] },
+  ],
+  "This Year": [
+    { label: "Jan", values: [3, 2, 4, 3, 3] },
+    { label: "Feb", values: [2, 3, 2, 2, 4] },
+    { label: "Mar", values: [4, 2, 5, 1, 3] },
+    { label: "Apr", values: [3, 3, 3, 3, 3] },
+    { label: "May", values: [4, 4, 2, 2, 2] },
+  ],
+  "All Time": [
+    { label: "2022", values: [2, 2, 2, 2, 2] },
+    { label: "2023", values: [3, 3, 3, 3, 3] },
+    { label: "2024", values: [4, 4, 4, 4, 4] },
+  ],
+};
 
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
+const SingleMoodLineChart = () => {
+  const [selectedMoodIndex, setSelectedMoodIndex] = useState(0);
+  const [selectedFilter, setSelectedFilter] = useState("This Month");
+  const [menuVisible, setMenuVisible] = useState(false);
 
-  const mockData = [
-    {
-      timestamp: new Date(),
-      happy: 4,
-      sad: 2,
-      calm: 3,
-      anxious: 2,
-      energetic: 5,
-    },
-    {
-      timestamp: new Date(Date.now() - 3 * 86400000),
-      happy: 3,
-      sad: 3,
-      calm: 2,
-      anxious: 4,
-      energetic: 4,
-    },
-    {
-      timestamp: new Date("2025-04-01T14:30:00"),
-      happy: 3,
-      sad: 1,
-      calm: 4,
-      anxious: 2,
-      energetic: 3,
-    },
-    {
-      timestamp: new Date("2025-05-15T10:00:00"),
-      happy: 2,
-      sad: 5,
-      calm: 3,
-      anxious: 3,
-      energetic: 2,
-    },
-    {
-      timestamp: new Date("2025-06-10T17:00:00"),
-      happy: 4,
-      sad: 2,
-      calm: 2,
-      anxious: 1,
-      energetic: 4,
-    },
-    {
-      timestamp: new Date("2025-03-12T09:00:00"),
-      happy: 1,
-      sad: 3,
-      calm: 5,
-      anxious: 2,
-      energetic: 5,
-    },
-  ];
-
-  useEffect(() => {
-    const now = new Date();
-    let filtered = [];
-
-    switch (selectedFilter) {
-      case "Last Scan":
-        const last = mockData.reduce((a, b) =>
-          a.timestamp > b.timestamp ? a : b
-        );
-        filtered = [last];
-        break;
-      case "This Week":
-        filtered = mockData.filter(
-          (scan) => now - scan.timestamp <= 7 * 86400000
-        );
-        break;
-      case "This Month":
-        filtered = mockData.filter(
-          (scan) => now - scan.timestamp <= 30 * 86400000
-        );
-        break;
-      case "This Year":
-        filtered = mockData.filter(
-          (scan) => scan.timestamp.getFullYear() === now.getFullYear()
-        );
-        break;
-      default:
-        filtered = mockData;
-    }
-
-    setScanCount(filtered.length);
-
-    if (filtered.length > 0) {
-      const sums = filtered.reduce(
-        (acc, scan) => {
-          acc[0] += scan.happy;
-          acc[1] += scan.sad;
-          acc[2] += scan.calm;
-          acc[3] += scan.anxious;
-          acc[4] += scan.energetic;
-          return acc;
-        },
-        [0, 0, 0, 0, 0]
-      );
-      setFilteredData(sums.map((sum) => sum / filtered.length));
-    } else {
-      setFilteredData([0, 0, 0, 0, 0]);
-    }
-  }, [selectedFilter]);
-
-  const pieData = d3Shape
-    .pie()
-    .value((d) => d)
-    .padAngle(0.04)(filteredData);
-
-  const arcGenerator = d3Shape
-    .arc()
-    .innerRadius(65)
-    .outerRadius(100)
-    .cornerRadius(10);
+  const labels = dummyData[selectedFilter].map((entry) => entry.label);
+  const moodData = dummyData[selectedFilter].map(
+    (entry) => entry.values[selectedMoodIndex]
+  );
 
   return (
     <View style={styles.card}>
+      <Text style={styles.title}>Mood Trends</Text>
+
+      {/* Mood Selector */}
+      <View style={styles.segmentContainer}>
+        {moods.map((mood, index) => (
+          <Pressable
+            key={mood}
+            onPress={() => setSelectedMoodIndex(index)}
+            style={[
+              styles.segmentButton,
+              selectedMoodIndex === index && styles.segmentSelected,
+            ]}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                selectedMoodIndex === index && styles.segmentTextSelected,
+              ]}
+            >
+              {mood}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Filter Dropdown */}
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Analysis</Text>
         <Menu
-          visible={visible}
-          onDismiss={closeMenu}
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
           anchor={
             <Button
+              onPress={() => setMenuVisible(true)}
               mode="text"
-              contentStyle={styles.dropdownButtonContent}
-              onPress={openMenu}
               labelStyle={styles.dropdownText}
+              contentStyle={styles.dropdownButtonContent}
               uppercase={false}
-            >
-              <View style={styles.dropdownRow}>
-                <Text style={styles.dropdownText}>{selectedFilter}</Text>
+              icon={() => (
                 <MaterialIcons
                   name="keyboard-arrow-down"
-                  size={18}
+                  size={16}
                   color="#888"
                 />
-              </View>
+              )}
+            >
+              {selectedFilter}
             </Button>
           }
           contentStyle={styles.menuContent}
@@ -169,7 +104,7 @@ const MoodPieChartBox = () => {
               key={option}
               onPress={() => {
                 setSelectedFilter(option);
-                closeMenu();
+                setMenuVisible(false);
               }}
               title={option}
               titleStyle={[
@@ -185,68 +120,81 @@ const MoodPieChartBox = () => {
         </Menu>
       </View>
 
-      <View style={styles.chartContainer}>
-        <Svg width={220} height={220}>
-          <G x={110} y={110}>
-            {pieData.map((arc, index) => (
-              <Path
-                key={index}
-                d={arcGenerator(arc)!}
-                fill={colors[index % colors.length]}
-              />
-            ))}
-          </G>
-        </Svg>
-        <View style={styles.centerText}>
-          <Text style={styles.scanNumber}>{scanCount}</Text>
-          <Text style={styles.scanLabel}>
-            {scanCount === 1 ? "Scan" : "Scans"}
-          </Text>
-        </View>
-      </View>
+      {/* Line Chart */}
+      <LineChart
+        data={{
+          labels,
+          datasets: [
+            {
+              data: moodData,
+              color: () => colors[selectedMoodIndex],
+              strokeWidth: 2,
+              withDots: false,
+            },
+          ],
+        }}
+        width={screenWidth}
+        height={220}
+        chartConfig={{
+          backgroundGradientFrom: "#fff",
+          backgroundGradientTo: "#fff",
+          decimalPlaces: 1,
+          color: () => colors[selectedMoodIndex],
+          labelColor: () => "#666",
+          propsForDots: { r: "0" },
+          propsForBackgroundLines: {
+            stroke: "transparent",
+          },
+        }}
+        withShadow={false}
+        withInnerLines={false}
+        withOuterLines={false}
+        withVerticalLines={false}
+        withHorizontalLines={false}
+        bezier
+        style={{ marginTop: 10, borderRadius: 16 }}
+      />
     </View>
   );
 };
+
+export default SingleMoodLineChart;
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 24,
     padding: 20,
-    marginTop: 30,
-    width: screenWidth - 32,
-    alignSelf: "center",
+    marginHorizontal: 20,
+    marginBottom: 30,
     elevation: 6,
     shadowColor: "#000",
     shadowOpacity: 0.07,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 10,
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#000",
+    marginBottom: 16,
   },
-  dropdownRow: {
+  headerRow: {
     flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
+    marginBottom: 8,
   },
   dropdownText: {
     fontSize: 14,
     color: "#888",
   },
   dropdownButtonContent: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
   menuContent: {
     backgroundColor: "#fff",
     borderRadius: 14,
-    paddingVertical: 0,
     overflow: "hidden",
     minWidth: 140,
     elevation: 6,
@@ -256,32 +204,40 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     backgroundColor: "#fff",
-    borderRadius: 0,
     paddingVertical: 6,
   },
   dropdownItemText: {
     fontSize: 15,
     color: "#888",
   },
-  chartContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    marginTop: 20,
+  segmentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#F2F2F7",
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 10,
+    alignSelf: "center",
   },
-  centerText: {
-    position: "absolute",
-    alignItems: "center",
+  segmentButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginHorizontal: 2,
   },
-  scanNumber: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#000",
+  segmentSelected: {
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
   },
-  scanLabel: {
-    fontSize: 14,
+  segmentText: {
     color: "#666",
+    fontWeight: "500",
+    fontSize: 14,
+  },
+  segmentTextSelected: {
+    color: "#000",
+    fontWeight: "600",
   },
 });
-
-export default MoodPieChartBox;

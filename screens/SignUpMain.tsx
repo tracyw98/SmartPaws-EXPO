@@ -13,7 +13,7 @@ const SignupScreen: React.FC = () => {
       {/* ✅ Illustration (Manually Adjustable) */}
       <View style={styles.illustrationContainer}>
         <Image
-          source={require("../assets/corgi.png")}
+          source={require("../assets/LetsGetStartedDog.png")}
           style={styles.illustration}
         />
       </View>
@@ -53,7 +53,7 @@ const SignupScreen: React.FC = () => {
           style={styles.emailButton}
           onPress={() => navigation.navigate("SignUp1")} // ✅ Navigate to SignUp1
         >
-          <Image source={require("../assets/email.png")} style={styles.icon} />
+          <Image source={require("../assets/Mail.png")} style={styles.icon} />
           <Text style={styles.buttonText}>Continue with Email</Text>
         </TouchableOpacity>
       </View>
@@ -88,13 +88,13 @@ const styles = StyleSheet.create({
     left: 10,
     right: 10,
     height: "81%",
-    backgroundColor: "rgba(63, 145, 245, 0.24)",
+    backgroundColor: "rgba(255, 253, 253, 0)",
     borderRadius: 30,
   },
 
   illustrationContainer: {
     position: "absolute",
-    top: 70,
+    top: 50,
     alignItems: "center",
     width: "100%",
   },

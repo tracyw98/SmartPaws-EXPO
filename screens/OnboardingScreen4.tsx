@@ -1,72 +1,71 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Image } from "expo-image";
+import Svg, { Path } from "react-native-svg";
+
+const { width: screenWidth } = Dimensions.get("window");
+const imageWidth = screenWidth * 1.1;
+const imageHeight = imageWidth * 1.1;
 
 const OnboardingScreen4 = () => {
   const navigation = useNavigation();
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const handleFinish = async () => {
+    await AsyncStorage.setItem("hasOnboarded", "true");
+    navigation.navigate("AuthStack", { screen: "SignUpMain" }); // 👈 navigate to nested screen
+  };
 
   return (
     <View style={styles.container}>
-      {/* ✅ Dog Image with Adjustable Size */}
-      <Image
-        source={require("../assets/dog-and-statistics.png")}
-        style={{
-          width: 320,
-          height: 380,
-          resizeMode: "contain",
-          marginTop: -70,
-        }}
-      />
+      <Text style={styles.logo}>smartpaws</Text>
 
-      {/* ✅ Title */}
-      <Text style={styles.title}>Setting up your account</Text>
+      <View style={styles.imageWrapper}>
+        <Svg
+          style={styles.svg}
+          viewBox="0 0 1005 628"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <Path
+            d="M838.925 97.43C607.89 263.485 348.246 101.666 247.303 0C60.6823 235.103 -200.587 662.736 247.303 492.445C695.193 322.154 903.676 511.861 951.931 628C1010.53 381.954 1069.96 -68.6246 838.925 97.43Z"
+            fill="#FFE267"
+          />
+        </Svg>
 
-      {/* ✅ Subtitle */}
+        <Image
+          source={require("../assets/dog-stats.png")}
+          onLoadEnd={() => setImageLoaded(true)}
+          style={{
+            width: imageWidth,
+            height: imageHeight,
+            opacity: imageLoaded ? 1 : 0,
+          }}
+          contentFit="contain"
+          transition={300}
+        />
+      </View>
+
+      <View style={styles.progressContainer}>
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+        <View style={[styles.dot, styles.activeDot]} />
+      </View>
+
+      <Text style={styles.title}>Set Up Your Account</Text>
       <Text style={styles.subtitle}>
         Set up an account to track your pup’s mood, behavior, and breed
         insights—personalized just for you!
       </Text>
 
-      {/* ✅ Steps with Lines */}
-      <View style={styles.stepsContainer}>
-        <View style={styles.stepWrapper}>
-          <View style={styles.stepRow}>
-            <Image
-              source={require("../assets/number-one-circle.png")}
-              style={styles.stepIcon}
-            />
-            <Text style={styles.stepText}>Sign up for access</Text>
-          </View>
-          <View style={styles.line} />
-        </View>
-
-        <View style={styles.stepWrapper}>
-          <View style={styles.stepRow}>
-            <Image
-              source={require("../assets/number-two-circle.png")}
-              style={styles.stepIcon}
-            />
-            <Text style={styles.stepText}>Verify account with code</Text>
-          </View>
-          <View style={styles.line} />
-        </View>
-
-        <View style={styles.stepWrapper}>
-          <View style={styles.stepRow}>
-            <Image
-              source={require("../assets/number-three-circle.png")}
-              style={styles.stepIcon}
-            />
-            <Text style={styles.stepText}>
-              Take a photo of your pet to fill out pet profile
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* ✅ Buttons */}
       <View style={styles.buttonRow}>
-        {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -74,11 +73,7 @@ const OnboardingScreen4 = () => {
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
 
-        {/* Finish Button */}
-        <TouchableOpacity
-          style={styles.finishButton}
-          onPress={() => navigation.replace("SignUpMain")} // ✅ Navigate to SignUp
-        >
+        <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
       </View>
@@ -91,67 +86,74 @@ export default OnboardingScreen4;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",
+    paddingTop: 50,
+    paddingHorizontal: 25,
+    alignItems: "center",
   },
-  image: {
-    width: 320,
-    height: 250,
-    resizeMode: "contain",
-    marginBottom: 20,
+  logo: {
+    fontSize: 22,
+    fontFamily: "Nunito-Bold",
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  imageWrapper: {
+    width: imageWidth,
+    height: imageHeight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: -50,
+    overflow: "hidden",
+  },
+  svg: {
+    position: "absolute",
+    top: "10%",
+    left: "-35%",
+    width: "150%",
+    height: "100%",
+    zIndex: -1,
+  },
+  progressContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 30,
+    gap: 8,
+  },
+  dot: {
+    width: 14,
+    height: 6,
+    borderRadius: 4,
+    backgroundColor: "#D3D3D3",
+  },
+  activeDot: {
+    backgroundColor: "#3B82F6",
+    width: 36,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
+    fontWeight: "bold",
+    fontFamily: "Poppins-Bold",
     textAlign: "center",
     marginBottom: 10,
-    fontWeight: "bold",
   },
   subtitle: {
-    fontSize: 13,
-    textAlign: "center",
-    marginBottom: 20,
-    fontWeight: "400",
-  },
-  stepsContainer: {
-    width: "100%",
-  },
-  stepWrapper: {
-    marginBottom: 10,
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  stepIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-  },
-  stepText: {
     fontSize: 12,
-    fontWeight: "400",
+    fontFamily: "Figtree-Regular",
+    color: "#555",
+    textAlign: "center",
+    paddingHorizontal: 3,
+    marginBottom: 40,
   },
-  line: {
-    height: 1,
-    backgroundColor: "#C4C4C4",
-    width: "90%",
-    alignSelf: "center",
-    marginTop: 5,
-  },
-
-  /** 📌 Adjust the button positioning */
   buttonRow: {
     flexDirection: "row",
-    width: "100%",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    width: "100%",
+    paddingHorizontal: 10,
     position: "absolute",
-    bottom: 80,
+    bottom: 70,
   },
-
-  /** 📌 Back button */
   backButton: {
     paddingVertical: 12,
     paddingHorizontal: 30,
@@ -159,18 +161,18 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: "gray",
-    fontSize: 13,
+    fontSize: 14,
+    fontFamily: "Inter-Medium",
   },
-
-  /** 📌 Finish button */
   finishButton: {
     backgroundColor: "#0451FA",
     paddingVertical: 12,
-    paddingHorizontal: 35,
-    borderRadius: 18,
+    paddingHorizontal: 45,
+    borderRadius: 13,
   },
   finishButtonText: {
     color: "#FFFFFF",
-    fontSize: 13,
+    fontSize: 14,
+    fontFamily: "Inter-Medium",
   },
 });

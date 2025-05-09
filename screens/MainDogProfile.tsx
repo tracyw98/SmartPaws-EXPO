@@ -1,38 +1,31 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import MoodPieChartSummary from "../components/MoodPieChartSummary"; // ✅ adjust path if needed
 
 const MainDogProfile = () => {
-  // 🔧 When API is ready: Replace this mock object with real fetched data
   const dog = {
-    name: "Dusty", // 🔧 Replace with dog.name from API
-    breed: "Siberian Husky", // 🔧 Replace with dog.breed
-    imageUri: null, // 🔧 Replace with dog.imageUri (e.g. from CDN or backend)
-    weight: "44 lbs", // 🔧 Replace with dog.weight
-    age: "4 years old", // 🔧 Replace with dog.age
-    color: "Gray/Black", // 🔧 Replace with dog.color
+    name: "Dusty",
+    breed: "Siberian Husky",
+    imageUri: null,
+    weight: "44 lbs",
+    age: "4 years old",
+    color: "Gray/Black",
   };
 
   return (
-    <View style={styles.container}>
-      {/* Profile Section with Gradient Box */}
-      <LinearGradient
-        colors={["#E3EDF8", "#F7F9FB"]}
-        style={styles.profileCard}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      >
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
+      {/* Profile Section (No Background) */}
+      <View style={styles.profileCard}>
         <Image
-          // 🔧 If using remote URL: source={{ uri: dog.imageUri }}
           source={
-            dog.imageUri ? { uri: dog.imageUri } : require("../assets/paw.png") // fallback if no photo from backend
+            dog.imageUri ? { uri: dog.imageUri } : require("../assets/paw.png")
           }
           style={styles.avatar}
         />
         <Text style={styles.name}>{dog.name}</Text>
         <Text style={styles.breed}>{dog.breed}</Text>
-      </LinearGradient>
+      </View>
 
       {/* About Section */}
       <Text style={styles.sectionTitle}>About {dog.name}</Text>
@@ -57,32 +50,38 @@ const MainDogProfile = () => {
         </View>
       </View>
 
+      {/* Mood Section */}
       <Text style={styles.sectionTitle}>Mood Stats</Text>
-    </View>
+      <MoodPieChartSummary />
+    </ScrollView>
   );
 };
 
 export default MainDogProfile;
 
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flex: 1,
     backgroundColor: "#FAFAFA",
+  },
+  container: {
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 10,
+    paddingBottom: 60,
   },
   profileCard: {
     alignItems: "center",
     paddingVertical: 24,
     marginBottom: 24,
     borderRadius: 10,
+    backgroundColor: "transparent", // 🧼 Removed colored background
   },
   avatar: {
     width: 200,
     height: 200,
     borderRadius: 100,
     backgroundColor: "#d3e1ef",
-    marginBottom: 10,
+    marginBottom: 15,
   },
   name: {
     fontSize: 24,

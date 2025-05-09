@@ -77,4 +77,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Firebase config files (sensitive)
+android/app/google-services.json
+ios/GoogleService-Info.plist
+firebaseConfig.js
+
 # @end expo-cli
